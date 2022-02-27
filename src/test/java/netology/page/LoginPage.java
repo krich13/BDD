@@ -19,10 +19,8 @@ public class LoginPage {
         loginButton.click();
     }
 
-    public void invalidLogin(DataHelper.AuthInfo info) {
-        loginField.setValue(info.getLogin());
-        passwordField.setValue(info.getPassword());
-        loginButton.click();
+    public void invalidLoginBannerAppear() {
         errorBanner.shouldBe(Condition.visible);
     }
+
 }

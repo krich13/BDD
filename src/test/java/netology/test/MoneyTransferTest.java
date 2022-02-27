@@ -15,22 +15,12 @@ public class MoneyTransferTest {
     private final int amountToBeTransferredMoreThanExistOnCards = 20000;
 
     @Test
-    void shouldLoginWithValidData() { //тест на валидный логин
-        open("http://localhost:9999");
-        var loginPage = new LoginPage();
-        DataHelper.AuthInfo authInfo = DataHelper.getCorrectAuthInfo();
-        loginPage.validLogin(authInfo);
-        VerificationPage user = new VerificationPage();
-        DataHelper.VerificationCode verificationCode = DataHelper.getValidVerificationCodeFor(authInfo);
-        user.validVerify(verificationCode);
-    }
-
-    @Test
     void shouldNotLoginWithInvalidData() { //тест на невалидный логин
         open("http://localhost:9999");
         var loginPage = new LoginPage();
         DataHelper.AuthInfo authInfo = DataHelper.getWrongAuthInfo();
-        loginPage.invalidLogin(authInfo);
+        loginPage.validLogin(authInfo);
+        loginPage.invalidLoginBannerAppear();
     }
 
     @Test
@@ -41,49 +31,35 @@ public class MoneyTransferTest {
         loginPage.validLogin(authInfo);
         VerificationPage user = new VerificationPage();
         DataHelper.VerificationCode verificationCode = DataHelper.getInvalidVerificationCode(authInfo);
-        user.invalidVerify(verificationCode);
-    }
-
-    @Test
-    void shouldOpenFillPageAfterClickFillButton() { // тест, при котором нажав на кнопку "Пополнить" вы действительно перейдёте на страницу перевода средств
-        open("http://localhost:9999");
-        var loginPage = new LoginPage();
-        DataHelper.AuthInfo authInfo = DataHelper.getCorrectAuthInfo(); //var authInfo = DataHelper.getAuthInfo(); //var класс переменной определяется выраж после равно
-        loginPage.validLogin(authInfo);
-        VerificationPage user = new VerificationPage();
-        DataHelper.VerificationCode verificationCode = DataHelper.getValidVerificationCodeFor(authInfo);
         user.validVerify(verificationCode);
-        DashboardPage dashboardPage = new DashboardPage();
-        dashboardPage.clickTopUpButton();
-        TopUpPage balancePage = new TopUpPage(); //для работы со страницей создаю новый объект
+        user.invalidVerifyBannerAppear();
     }
 
     @Test
     void shouldOpenDashboardPageAfterClickOnCancel() { //при нажатии кнопки отмена, переход на дашборд и баланс не меняется
         open("http://localhost:9999");
-        var loginPage = new LoginPage(); //создаем новый объект страницы логина
+        var loginPage = new LoginPage();
         DataHelper.AuthInfo authInfo = DataHelper.getCorrectAuthInfo();
         loginPage.validLogin(authInfo);
         VerificationPage user = new VerificationPage();
         DataHelper.VerificationCode verificationCode = DataHelper.getValidVerificationCodeFor(authInfo);
         user.validVerify(verificationCode);
         DashboardPage dashboardPage = new DashboardPage();
-        dashboardPage.getFirstCardCreditBalance(); //вызываем метод получения баланса 1 карты
-        dashboardPage.getSecondCardCreditBalance(); //вызываем метод баланса 2 карты
         int balanceFirstCard = dashboardPage.getFirstCardCreditBalance();
         int balanceSecondCard = dashboardPage.getSecondCardCreditBalance();
         dashboardPage.clickTopUpButton();
         TopUpPage balancePage = new TopUpPage();
-        balancePage.fillOutFormForPositiveTransferToFirstCardFromSecondCard(amountToBeTransferred);
+        String chosenCard = String.valueOf(DataHelper.getFirstCreditCard());
+        balancePage.fillOutForm(amountToBeTransferred, chosenCard);
         balancePage.clickCancelButton();
         int balanceFirstCardAfterTransfer = dashboardPage.getFirstCardCreditBalance();
         int balanceSecondCardAfterTransfer = dashboardPage.getSecondCardCreditBalance();
-        Assertions.assertEquals(balanceFirstCard + amountToBeTransferred, balanceFirstCardAfterTransfer);
-        Assertions.assertEquals(balanceSecondCard - amountToBeTransferred, balanceSecondCardAfterTransfer);
+        Assertions.assertEquals(balanceFirstCard, balanceFirstCardAfterTransfer);
+        Assertions.assertEquals(balanceSecondCard, balanceSecondCardAfterTransfer);
     }
 
     @Test
-    void shouldFailWithTransferToWrongCreditCard() {
+    void shouldFailWithTransferToWrongCreditCard() { //не дает сделать перевод на неверную карту, баланс не меняется
         open("http://localhost:9999");
         var loginPage = new LoginPage(); //создаем новый объект страницы логина
         DataHelper.AuthInfo authInfo = DataHelper.getCorrectAuthInfo(); //создаем новый объект класса DataHelper.AuthInfo, называем его и инициализируем
@@ -92,15 +68,22 @@ public class MoneyTransferTest {
         DataHelper.VerificationCode verificationCode = DataHelper.getValidVerificationCodeFor(authInfo); //создаем новый объект класса DataHelper.VerificationCode, называем его и инициализируем
         user.validVerify(verificationCode); //вызываем метод нового объекта и передаем туда данные кода
         DashboardPage dashboardPage = new DashboardPage(); //создаем новый объект страницы дашборда
+        int balanceFirstCard = dashboardPage.getFirstCardCreditBalance();
+        int balanceSecondCard = dashboardPage.getSecondCardCreditBalance();
         dashboardPage.clickTopUpButton();
         TopUpPage balancePage = new TopUpPage(); //для работы со страницей баланса создаю новый объект
-        balancePage.fillOutFormForPositiveTransferFromWrongCard(amountToBeTransferred); //заполняю форму
+        String chosenCard = String.valueOf(DataHelper.getWrongCreditCard());
+        balancePage.fillOutForm(amountToBeTransferred, chosenCard);
         balancePage.clickTopUpButton(); //кликаю на кнопку пополнить
         balancePage.shouldAppearBannerWrongCard();
+        int balanceFirstCardAfterTransfer = dashboardPage.getFirstCardCreditBalance();
+        int balanceSecondCardAfterTransfer = dashboardPage.getSecondCardCreditBalance();
+        Assertions.assertEquals(balanceFirstCard, balanceFirstCardAfterTransfer);
+        Assertions.assertEquals(balanceSecondCard, balanceSecondCardAfterTransfer);
     }
 
     @Test
-    void shouldOpenDashboardAfterSuccessfulTransfer() { // тест при котором при успешном переводе, вы вернётесь назад на страницу со списком карт + здесь нужно проверить, что баланс меняется после перевода
+    void shouldOpenDashboardAfterSuccessfulTransfer() { // тест при котором при успешном переводе, вы вернётесь назад на страницу со списком карт + баланс меняется после перевода
         open("http://localhost:9999");
         var loginPage = new LoginPage();
         DataHelper.AuthInfo authInfo = DataHelper.getCorrectAuthInfo();
@@ -109,13 +92,12 @@ public class MoneyTransferTest {
         DataHelper.VerificationCode verificationCode = DataHelper.getValidVerificationCodeFor(authInfo);
         user.validVerify(verificationCode);
         DashboardPage dashboardPage = new DashboardPage();
-        dashboardPage.getFirstCardCreditBalance();
-        dashboardPage.getSecondCardCreditBalance();
         int balanceFirstCard = dashboardPage.getFirstCardCreditBalance();
         int balanceSecondCard = dashboardPage.getSecondCardCreditBalance();
         dashboardPage.clickTopUpButton();
         TopUpPage balancePage = new TopUpPage();
-        balancePage.fillOutFormForPositiveTransferToFirstCardFromSecondCard(amountToBeTransferred);
+        String chosenCard = String.valueOf(DataHelper.getSecondCreditCard());
+        balancePage.fillOutForm(amountToBeTransferred, chosenCard);
         balancePage.clickTopUpButton();
         int balanceFirstCardAfterTransfer = dashboardPage.getFirstCardCreditBalance();
         int balanceSecondCardAfterTransfer = dashboardPage.getSecondCardCreditBalance();
@@ -134,15 +116,11 @@ public class MoneyTransferTest {
         DataHelper.VerificationCode verificationCode = DataHelper.getValidVerificationCodeFor(authInfo);
         user.validVerify(verificationCode);
         DashboardPage dashboardPage = new DashboardPage();
-        dashboardPage.getFirstCardCreditBalance();
-        dashboardPage.getSecondCardCreditBalance();
-        int balanceFirstCard = dashboardPage.getFirstCardCreditBalance();
-        int balanceSecondCard = dashboardPage.getSecondCardCreditBalance();
         dashboardPage.clickTopUpButton();
         TopUpPage balancePage = new TopUpPage();
-        balancePage.fillOutFormForNegativeTransferToFirstCardFromSecondCard(amountToBeTransferredMoreThanExistOnCards);
+        String chosenCard = String.valueOf(DataHelper.getFirstCreditCard());
+        balancePage.fillOutForm(amountToBeTransferredMoreThanExistOnCards, chosenCard);
         balancePage.clickTopUpButton();
-        int balanceFirstCardAfterTransfer = dashboardPage.getFirstCardCreditBalance();
         int balanceSecondCardAfterTransfer = dashboardPage.getSecondCardCreditBalance();
         Assertions.assertTrue(balanceSecondCardAfterTransfer > 0);
     }

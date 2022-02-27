@@ -20,9 +20,7 @@ public class VerificationPage {
         verifyButton.click();
     }
 
-    public void invalidVerify(DataHelper.VerificationCode verificationCode) {
-        codeField.setValue(verificationCode.getCode());
-        verifyButton.click();
+    public void invalidVerifyBannerAppear() {
         errorBanner.shouldBe(visible);
     }
 }

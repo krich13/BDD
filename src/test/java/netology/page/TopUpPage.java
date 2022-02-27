@@ -2,7 +2,6 @@ package netology.page;
 
 import com.codeborne.selenide.Selectors;
 import com.codeborne.selenide.SelenideElement;
-import netology.data.DataHelper;
 
 import static com.codeborne.selenide.Condition.appear;
 import static com.codeborne.selenide.Condition.visible;
@@ -19,19 +18,9 @@ public class TopUpPage {
         $(Selectors.byText("Пополнение карты")).shouldBe(appear);
     }
 
-    public void fillOutFormForPositiveTransferToFirstCardFromSecondCard(int amountToBeTransferred) { //метод заполнения формы коректными данными карты
+    public void fillOutForm(int amountToBeTransferred, String chosenCard) { //метод заполнения формы (данные карты передаем в тесте)
         transferAmount.setValue(Integer.toString(amountToBeTransferred));
-        fromWhatCardShouldBeTransfer.setValue(DataHelper.getSecondCreditCard().getCreditCard());
-    }
-
-    public void fillOutFormForNegativeTransferToFirstCardFromSecondCard(int amountToBeTransferredMoreThanExistOnCards) { //метод заполнения формы коректными данными карты
-        transferAmount.setValue(Integer.toString(amountToBeTransferredMoreThanExistOnCards));
-        fromWhatCardShouldBeTransfer.setValue(DataHelper.getSecondCreditCard().getCreditCard());
-    }
-
-    public void fillOutFormForPositiveTransferFromWrongCard(int amountToBeTransferred) { //метод заполнения формы некоректными данными карты
-        transferAmount.setValue(Integer.toString(amountToBeTransferred));
-        fromWhatCardShouldBeTransfer.setValue(DataHelper.getWrongCreditCard().getCreditCard());
+        fromWhatCardShouldBeTransfer.setValue(chosenCard);
     }
 
     public void clickTopUpButton() { //метод клика на кнопку пополнить
