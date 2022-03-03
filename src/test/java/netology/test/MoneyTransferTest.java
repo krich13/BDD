@@ -59,7 +59,7 @@ public class MoneyTransferTest {
     }
 
     @Test
-    void shouldFailWithTransferToWrongCreditCard() { //не дает сделать перевод c неверной карту, при этом баланс кары6 на которую должен быть перевод не меняется
+    void shouldFailWithTransferToWrongCreditCard() { //не дает сделать перевод c неверной карты, при этом баланс карты, на которую должен быть перевод, не меняется
         open("http://localhost:9999");
         var loginPage = new LoginPage(); //создаем новый объект страницы логина
         DataHelper.AuthInfo authInfo = DataHelper.getCorrectAuthInfo(); //создаем новый объект класса DataHelper.AuthInfo, называем его и инициализируем
@@ -69,6 +69,7 @@ public class MoneyTransferTest {
         user.validVerify(verificationCode); //вызываем метод нового объекта и передаем туда данные кода
         DashboardPage dashboardPage = new DashboardPage(); //создаем новый объект страницы дашборда
         int balanceFirstCard = dashboardPage.getFirstCardCreditBalance();
+        int balanceSecondCard = dashboardPage.getSecondCardCreditBalance();
         dashboardPage.clickTopUpButton();
         TopUpPage balancePage = new TopUpPage(); //для работы со страницей баланса создаю новый объект
         String chosenCard = String.valueOf(DataHelper.getWrongCreditCard());
@@ -77,7 +78,9 @@ public class MoneyTransferTest {
         balancePage.shouldAppearBannerWrongCard();
         balancePage.clickCancelButton();
         int balanceFirstCardAfterTransfer = dashboardPage.getFirstCardCreditBalance();
+        int balanceSecondCardAfterTransfer = dashboardPage.getSecondCardCreditBalance();
         Assertions.assertEquals(balanceFirstCard, balanceFirstCardAfterTransfer);
+        Assertions.assertEquals(balanceSecondCard, balanceSecondCardAfterTransfer);
     }
 
     @Test
